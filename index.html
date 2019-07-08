@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+
+
+
+    <title>Hello, world!</title>
+</head>
+
+<style>
+    .canvasInline {
+        display: inline-block;
+        float: left;
+        position: absolute;
+
+    }
+    .canvasWrapper {
+        display: block;
+        position: relative;
+        width: 402px;
+        height: 402px;
+        float: left;
+    }
+    .linebreak {
+        margin: auto;
+        width: 1650px;
+        align-content: center;
+    }
+    .frag {
+        width: 126px;
+        height: 126px;
+    }
+    canvas {
+        border: 1px solid black;
+    }
+</style>
+
+<div style="position: relative" class="clearfix">
+    <div class="clearfix linebreak" style="padding: 10px">
+        <button type="button" class="btn btn-light" onclick="changeImgSrc('image8-2.jpg')">google logo</button>
+        <button type="button" class="btn btn-light" onclick="changeImgSrc('boo.jpg')">dog image</button>
+        <button type="button" class="btn btn-light" onclick="changeImgSrc('image.png')">rick image</button>
+        <button type="button" class="btn btn-light" onclick="changeImgSrc('spirited_away.jpg')">spirited away</button>
+    </div>
+    <div class="clearfix linebreak" style="padding: 10px">
+        <button type="button" class="btn btn-light" onclick="changeShape(0)">shape0</button>
+        <button type="button" class="btn btn-light" onclick="changeShape(1)">shape1</button>
+        <button type="button" class="btn btn-light" onclick="changeShape(2)">shap2</button>
+        <button type="button" class="btn btn-light" onclick="changeShape(3)">shape3</button>
+        <button type="button" class="btn btn-light" onclick="changeShape(4)">shape4</button>
+    </div>
+
+    <div class="buttonsWrapper">
+        <div class="buttonsInner">
+            <span data-toggle="buttons">
+                <label id="translateButton" class="btn btn-secondary active"
+                       onclick="setCurrnetOperation(enum_TransformationOperation.TRANSLATE)">
+                    <input type="radio" name="options" autocomplete="off" checked>Move</input>
+                </label>
+                <label class="btn btn-secondary"
+                       onclick="setCurrnetOperation(enum_TransformationOperation.NON_UNIFORM_SCALE)">
+                    <input type="radio" name="options" autocomplete="off">Directional Scale</input>
+                </label>
+                <label class="btn btn-secondary"
+                       onclick="setCurrnetOperation(enum_TransformationOperation.UNIFORM_SCALE)">
+                    <input type="radio" name="options" autocomplete="off">Uniform Scale</input>
+                </label>
+                <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.ROTATE)">
+                    <input type="radio" name="options" autocomplete="off">Rotate</input>
+                </label>
+                <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_X)">
+                    <input type="radio" name="options" autocomplete="off">Skew/Shear X</input>
+                </label>
+                <label class="btn btn-secondary" onclick="setCurrnetOperation(enum_TransformationOperation.SKEW_Y)">
+                    <input type="radio" name="options" autocomplete="off">Skew/Shear Y</input>
+                </label>
+
+            </span>
+            <!--<button class="btn btn-default" onclick="toggleDrawKeypointsMode()" >Toggle DrawKeypoints</button>-->
+            <!--<button class="btn btn-default" style="float:right;" onclick="callSearch()">CompareImages</button>-->
+            <span style="float: right">
+                <span data-toggle="buttons">
+                   <div style="float: left; padding-right: 10px;">
+                        <button type="button" style="margin-bottom: 8px;" class="alert-danger btn btn-secondary"
+                            onclick="reset()">Reset</button>
+                   </div>
+                </span>
+            </span>
+        </div>
+    </div>
+
+
+
+    <div class="clearfix linebreak">
+        <p>Shape 1</p>
+        <div>
+            <div class="canvasWrapper">
+                <canvas id="shapeDemo" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="shapeDemo_ui" class="canvasInline" width="400" height="400"></canvas>
+            </div>
+        </div>
+
+        <div id="topAvgX"></div>
+        <div id="bottomAvgX"></div>
+
+        <div id="leftAvgY"></div>
+        <div id="rightAvgY"></div>
+
+        <div id="topAvgY"></div>
+        <div id="bottomAvgY"></div>
+
+        <div id="leftAvgX"></div>
+        <div id="rightAvgX"></div>
+
+    </div>
+
+    
+    <div class="clearfix linebreak">
+        <p>Click anywhere on this image below:</p>
+        <div>
+            <div class="canvasWrapper">
+                <canvas id="imageNoChanges" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="imageNoChanges_ui" class="canvasInline" width="400" height="400"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="clearfix linebreak">
+        <p>These are the two input images below:</p>
+        <div>
+            <div class="canvasWrapper">
+                <canvas id="inputImage1" class="canvasInline" width="400" height="400"></canvas>
+                <canvas id="inputImage1_ui" class="canvasInline" width="400" height="400"></canvas>
+            </div>
+        </div>
+        <div class="canvasWrapper">
+            <canvas id="inputImage2" class="canvasInline" width="400" height="400"></canvas>
+            <canvas id="inputImage2_ui" class="canvasInline" width="400" height="400"></canvas>
+        </div>
+    </div>
+    <div class="clearfix linebreak">
+        <p>The shapes before we fix them:</p>
+        <div class="canvasWrapper">
+            <canvas id="shapePreppedImage1" class="canvasInline" width="400" height="400"></canvas>
+            <canvas id="shapePreppedImage1_ui" class="canvasInline" width="400" height="400"></canvas>
+        </div>
+        <div class="canvasWrapper">
+            <canvas id="preppedImage1" class="canvasInline" width="400" height="400"></canvas>
+            <canvas id="preppedImage1_ui" class="canvasInline" width="400" height="400"></canvas>
+        </div>
+        <div class="canvasWrapper">
+            <canvas id="preppedImage2" class="canvasInline" width="400" height="400"></canvas>
+            <canvas id="preppedImage2_ui" class="canvasInline" width="400" height="400"></canvas>
+        </div>
+        <div class="canvasWrapper">
+            <canvas id="shapePreppedImage2" class="canvasInline" width="400" height="400"></canvas>
+            <canvas id="shapePreppedImage2_ui" class="canvasInline" width="400" height="400"></canvas>
+        </div>
+    </div>
+    <div class="clearfix linebreak">
+        <p>The shapes after we fix them:</p>
+        <div class="canvasWrapper">
+            <canvas id="shapeResult1" class="canvasInline" width="400" height="400"></canvas>
+            <canvas id="shapeResult1_ui" class="canvasInline" width="400" height="400"></canvas>
+        </div>
+        <div class="canvasWrapper">
+            <canvas id="imageResult1" class="canvasInline" width="400" height="400"></canvas>
+            <canvas id="imageResult1_ui" class="canvasInline" width="400" height="400"></canvas>
+        </div>
+        <div class="canvasWrapper" width="400" height="400">
+            <canvas id="imageResult2" class="canvasInline" width="400" height="400"></canvas>
+            <canvas id="imageResult2_ui" class="canvasInline" width="400" height="400"></canvas>
+        </div>
+        <div class="canvasWrapper" width="400" height="400">
+            <canvas id="shapeResult2" class="canvasInline" width="400" height="400"></canvas>
+            <canvas id="shapeResult2_ui" class="canvasInline" width="400" height="400"></canvas>
+        </div>
+    </div>
+    <div style="display: none;" class="clearfix linebreak">
+        <div class="canvasWrapper" width="400" height="400">
+            <canvas id="canvasOverlay" class="canvasInline" width="400" height="400"></canvas>
+            <canvas id="canvasOverlayUIResult" class="canvasInline" width="400" height="400"></canvas>
+        </div>
+        Slider here
+    </div>
+<!--    <div class="clearfix linebreak">-->
+<!--        <h3>The shapes after fix </h3>-->
+<!--        <div class="canvasWrapper">-->
+<!--            <canvas id="shapeNorm1" class="canvasInline" width="400" height="400"></canvas>-->
+<!--            <canvas id="shapeNorm1UI" class="canvasInline" width="400" height="400"></canvas>-->
+<!--        </div>-->
+<!--        <div class="canvasWrapper">-->
+<!--            <canvas id="shapeNorm2" class="canvasInline" width="400" height="400"></canvas>-->
+<!--            <canvas id="shapeNorm2UI" class="canvasInline" width="400" height="400"></canvas>-->
+<!--        </div>-->
+<!--        <div class="canvasWrapper" width="400" height="400">-->
+<!--            <canvas id="shapeNormOverlaps" class="canvasInline" width="400" height="400"></canvas>-->
+<!--            <canvas id="shapeNormOverlapsUI" class="canvasInline" width="400" height="400"></canvas>-->
+<!--        </div>-->
+<!--        <div class="canvasWrapper" width="400" height="400">-->
+<!--            <canvas id="____0" class="canvasInline" width="400" height="400"></canvas>-->
+<!--            <canvas id="____1" class="canvasInline" width="400" height="400"></canvas>-->
+<!--        </div>-->
+<!--    </div>-->
+    <p>These are what the extracted fragments look like (they should both look the same)</p>
+    <span>hash distance: </span><span id="hashDistance"></span>
+    <div class="clearfix linebreak">
+        <div class="canvasWrapper" >
+            <canvas id="drawFragment1" class="frag canvasInline" width="32" height="32"></canvas>
+            <canvas id="drawFragment1_ui" class="frag canvasInline" width="32" height="32"></canvas>
+        </div>
+        <div class="canvasWrapper" >
+            <canvas id="drawFragment2" class="frag canvasInline" width="32" height="32"></canvas>
+            <canvas id="drawFragment2_ui" class="frag canvasInline" width="32" height="32"></canvas>
+        </div>
+    </div>
+    <div class="clearfix linebreak">
+        <canvas style="display: none;" id="tempCanvas" class="canvasInline" width="400" height="400"></canvas>
+    </div>
+</div>
+<!--<div id="myDiv" style="width:880px; height:800px;"></div>-->
+
+<!--<canvas style="display: none" id="imageMods" width="200" height="200"></canvas>-->
+
+<style>
+    .ct-chart {
+        width: 600px;
+        height: 400px;
+    }
+    .ct-series-b .ct-point{
+        stroke: blue !important;
+    }
+</style>
+<body>
+<div class="ct-chart ct-golden-section" id="chart1" width="100"></div>
+
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="scripts/jquery.min.js"></script>
+<script src="scripts/jquery-3.3.1.slim.min.js"></script>
+<script src="scripts/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
+<script src="scripts/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
+
+<script src="scripts/shapes.js"></script>
+<script src="scripts/common.js"></script>
+<script src="scripts/downscale.js"></script>
+<script src="scripts/drawWrappers.js"></script>
+<script src="scripts/matrixMaths.js"></script>
+<script src="scripts/nelderMead.js"></script>
+<script src="scripts/phash.js"></script>
+<script src="scripts/polygonFuncs.js"></script>
+<script src="scripts/transformOperations.js"></script>
+
+<script src="scripts/stackblur.js"></script>
+<script src="scripts/math.min.js"></script>
+<script src="scripts/main.js"></script>
+
+
+<script src="scripts/marvinj-0.9.js"></script>
+
+
+
+</body>
+
