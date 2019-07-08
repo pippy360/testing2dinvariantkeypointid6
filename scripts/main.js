@@ -324,24 +324,66 @@ function getLowestInRange(shape) {
     return [solution.x[0], scaleAvg, (leftAvg+topAvg)/2];
 }
 
+function getk1val(inshape) {
+    var xs_sum = 0;
+    var ys_sum = 0;
+    var xy_mult_sum = 0;
+    for (let i = 0; i < inshape.length; i++) {
+        xs_sum += Math.pow( inshape[i][0], 2 );
+        ys_sum += Math.pow( inshape[i][1], 2 );
+        xy_mult_sum += inshape[i][0] * inshape[i][1];
+    }
+    var val = Math.pow(ys_sum, 2)/( (xs_sum*ys_sum) - xy_mult_sum );
+    return Math.sqrt( Math.sqrt( val  ) );
+}
+
+function getk2val(inshape) {
+    var xs_sum = 0;
+    var ys_sum = 0;
+    var xy_mult_sum = 0;
+    for (let i = 0; i < inshape.length; i++) {
+        xs_sum += Math.pow( inshape[i][0], 2 );
+        ys_sum += Math.pow( inshape[i][1], 2 );
+        xy_mult_sum += inshape[i][0] * inshape[i][1];
+    }
+    return (-1 * getk1val(inshape) * xy_mult_sum) / ys_sum
+}
+
 function getShapeFixingTransformationMatrix(shape) {
+    // shape = [[-1,-1], [1,-1], [1,1], [-1,1]];
+
     if (findCentroid(shape)[0] > 1 || findCentroid(shape)[1] > 1) {
         console.log("invalid shape");
         return null;
     }
-    const normVals2 = getLowestInRange(shape);
-    let withoutScaleFixMat = getImgmat(normVals2[0], normVals2[1]);
+    const k2 = getk2val(shape);
+    const k1 = getk1val(shape);
+    const withoutScaleFixMat =  [
+        [k1,  k2, 0],
+        [0, 1/k1, 0],
+        [0,    0, 1],
+    ];
+
+    var newshape = applyTransformationMatrixToAllKeypoints(shape, withoutScaleFixMat);
+    var count_old = 0;
+    var count_fix = 0;
+    for (var i = 0; i < shape.length; i++) {
+        count_old += shape[i][0]**2 + shape[i][1]**2;
+        count_fix += newshape[i][0]**2 + newshape[i][1]**2;
+    }
+    console.log("count_old");
+    console.log(count_old);
+    console.log(count_fix);
+
     let fixedShape = applyTransformationMatrixToAllKeypoints(shape, withoutScaleFixMat);
     let globalRadius = getTheRadius(fixedShape, [0,0]);
     let _scaleMatrix = getScaleMatrix(FIXED_SHAPE_SCALE/globalRadius, FIXED_SHAPE_SCALE/globalRadius);
     let withScaleFixMat = matrixMultiply(_scaleMatrix, withoutScaleFixMat);
     // let shapeWithScaleFix = applyTransformationMatrixToAllKeypoints(fixedShape, scaleMatrix);
     return {
-        scaleFixMat: withScaleFixMat,
+        scaleFixMat: withoutScaleFixMat,
         nonScaledFixedMat: withoutScaleFixMat,
         // shapeScaledFixedMat: withScaleFix,
-        scaleDirection: normVals2[0],
-        scale: normVals2[1],
         globalRadius: globalRadius,
     }
 }
@@ -937,6 +979,8 @@ function drawPointOfRotation(ctx, shape, rotation) {
 
 }
 
+let g_apply = false;
+
 function draw2(pageMousePosition) {
     if (!g_initImages) {
         initImages();
@@ -967,10 +1011,19 @@ function draw2(pageMousePosition) {
     // transMat = matrixMultiply(getTranslateMatrix_point(transformations.translate, -1), transMat);
 
     transMat = matrixMultiply(g_transformState.appliedTransformationsMat, transMat)
-    transMat = matrixMultiply(getTranslateMatrix(200, 200), transMat)
 
     shape = applyTransformationMatrixToAllKeypoints(shape, transMat);
-    
+    const temp_c = findCentroid(shape);
+    shape = applyTransformationMatrixToAllKeypoints(shape, getTranslateMatrix_point(temp_c, -1));
+
+    const image1ZeroPointFixMat_withoutRotationFix = getShapeFixingTransformationMatrix(shape).scaleFixMat;
+    if (g_apply || true)
+        shape = applyTransformationMatrixToAllKeypoints(shape, image1ZeroPointFixMat_withoutRotationFix);
+
+    shape = applyTransformationMatrixToAllKeypoints(shape, getTranslateMatrix_point(temp_c, ));
+
+    shape = applyTransformationMatrixToAllKeypoints(shape, getTranslateMatrix(200, 200));
+
     const c_shapeDemo = getCleanCanvas("shapeDemo");
     drawPolyFull(c_shapeDemo.ctx_ui, shape);
 
@@ -983,38 +1036,37 @@ function draw2(pageMousePosition) {
     drawline_m(c_shapeDemo.ctx_ui, [[200, 0], [200, 400]], 'red');
 
     drawRotationEffect(pageMousePosition);
-/*
-    try {
-        let hitPoints1Obj = getImage1HitPoints(clickedPoint.inputImage1);
-        let hitPoints2Obj = getImage2HitPoints(clickedPoint.inputImage2);
 
-        //calc the fixing matrix WITH GOOD SCALE
-        const image1ZeroPointFixMat_withoutRotationFix = getShapeFixingTransformationMatrix(hitPoints1Obj.hitpoints_c).scaleFixMat;
-        const image2ZeroPointFixMat = getShapeFixingTransformationMatrix(hitPoints2Obj.hitpoints_c).scaleFixMat;
-
-        //do the rotation hack
-        const image1ZeroPointFixMat = getRotationFixHack(hitPoints1Obj, hitPoints2Obj, image1ZeroPointFixMat_withoutRotationFix, image2ZeroPointFixMat);
-
-        //FIXME: fade the actual fragment area, it'll look nice
-        drawResultImages(hitPoints1Obj, hitPoints2Obj, image1ZeroPointFixMat, image2ZeroPointFixMat);
-
-        drawFragments(hitPoints1Obj, hitPoints2Obj, image1ZeroPointFixMat, image2ZeroPointFixMat);
-
-        drawUIElements(hitPoints1Obj, hitPoints2Obj, image1ZeroPointFixMat, image2ZeroPointFixMat);
-    } catch(err) {
-        console.log("bad point");
-        return;
-    }
-    */
+    // try {
+    //     let hitPoints1Obj = getImage1HitPoints(clickedPoint.inputImage1);
+    //     let hitPoints2Obj = getImage2HitPoints(clickedPoint.inputImage2);
+    //
+    //     //calc the fixing matrix WITH GOOD SCALE
+    //     const image1ZeroPointFixMat_withoutRotationFix = getShapeFixingTransformationMatrix(hitPoints1Obj.hitpoints_c).scaleFixMat;
+    //     const image2ZeroPointFixMat = getShapeFixingTransformationMatrix(hitPoints2Obj.hitpoints_c).scaleFixMat;
+    //
+    //     //do the rotation hack
+    //     const image1ZeroPointFixMat = getRotationFixHack(hitPoints1Obj, hitPoints2Obj, image1ZeroPointFixMat_withoutRotationFix, image2ZeroPointFixMat);
+    //
+    //     //FIXME: fade the actual fragment area, it'll look nice
+    //     drawResultImages(hitPoints1Obj, hitPoints2Obj, image1ZeroPointFixMat, image2ZeroPointFixMat);
+    //
+    //     drawFragments(hitPoints1Obj, hitPoints2Obj, image1ZeroPointFixMat, image2ZeroPointFixMat);
+    //
+    //     drawUIElements(hitPoints1Obj, hitPoints2Obj, image1ZeroPointFixMat, image2ZeroPointFixMat);
+    // } catch(err) {
+    //     console.log("bad point");
+    //     return;
+    // }
+    
 }
 
 function draw(pageMousePosition) {
-    draw2(pageMousePosition);
-    // g_img = new Image();
-    // g_img.onload = function () {
-    //     setTimeout(draw2, 0)
-    // };
-    // g_img.src = g_src;
+    g_img = new Image();
+    g_img.onload = function () {
+        draw2(pageMousePosition);
+    };
+    g_img.src = g_src;
 }
 
 var counter = 0;
