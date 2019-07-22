@@ -22,6 +22,7 @@ const COLOUR_SPLITS = 256;
 const FRAGMENT_CROP_RADIUS_MULT = 2;
 const PIXEL_CHANGE_CHECK_LENGTH = 1;
 const FIXED_SHAPE_SCALE = 50;
+let g_shape_index = 0;
 let g_shape = shape1_shape;
 var g_initImages = false;
 
@@ -325,16 +326,22 @@ function getLowestInRange(shape) {
 }
 
 function getk1val(inshape) {
-    var xs_sum = 0;
-    var ys_sum = 0;
-    var xy_mult_sum = 0;
+    let xs_sum = 0;
+    let ys_sum = 0;
+    let yss_sum = 0;
+    let xy_mult_sum = 0;
     for (let i = 0; i < inshape.length; i++) {
         xs_sum += Math.pow( inshape[i][0], 2 );
         ys_sum += Math.pow( inshape[i][1], 2 );
+        yss_sum += Math.pow( inshape[i][1], 4 );
         xy_mult_sum += inshape[i][0] * inshape[i][1];
     }
-    var val = Math.pow(ys_sum, 2)/( (xs_sum*ys_sum) - xy_mult_sum );
-    return Math.sqrt( Math.sqrt( val  ) );
+    let val = Math.pow(ys_sum,2)/( (xs_sum*ys_sum) - xy_mult_sum );
+    return Math.sqrt( Math.sqrt( ys_sum) )/Math.sqrt( Math.sqrt( xs_sum) );
+}
+
+function getScaleVal() {
+
 }
 
 function getk2val(inshape) {
@@ -364,7 +371,10 @@ function getShapeFixingTransformationMatrix(shape) {
         [0,    0, 1],
     ];
 
+    console.log("shape then newshape");
+    console.log(shape);
     var newshape = applyTransformationMatrixToAllKeypoints(shape, withoutScaleFixMat);
+    console.log(newshape);
     var count_old = 0;
     var count_fix = 0;
     for (var i = 0; i < shape.length; i++) {
@@ -567,10 +577,12 @@ const shapes = [
     square_shape,
     square_shape2,
     triangle_shape,
-    shape1_shape
+    shape1_shape,
+    square_shape_small
 ];
 
-function changeShape(index) {
+function setShape(index) {
+    g_shape_index = index;
     g_shape = shapes[index];
     draw();
 }
@@ -988,7 +1000,10 @@ function draw2(pageMousePosition) {
     }
     wipeCanvases();
 
-    window.history.pushState("object or string", "Title", "index.html?point=" + g_globalState.canvasClickLocation.x + "," + g_globalState.canvasClickLocation.y + "&image=" + g_src);
+    window.history.pushState("object or string", "Title", "index.html?point=" + g_globalState.canvasClickLocation.x + ","
+        + g_globalState.canvasClickLocation.y + "&image=" + g_src + "&appliedTransformationsMat="
+        + JSON.stringify(g_transformState.appliedTransformationsMat)+"&shapeIndex="+g_shape_index );
+
 
     const clickedPoint = g_getClickedPoint();
     let shape = g_shape;
@@ -1003,7 +1018,7 @@ function draw2(pageMousePosition) {
     const shapeCenter = [0, 0]//FIXME:
     const transformations = g_transformState.temporaryAppliedTransformations;
     
-    // //Rotate
+    // //Rotatecount_old
     // transMat = matrixMultiply(getRotationMatrix(-transformations.rotation), transMat);
     // //Scale
     // transMat = matrixMultiply(transformations.directionalScaleMatrix, transMat);
@@ -1017,6 +1032,7 @@ function draw2(pageMousePosition) {
     shape = applyTransformationMatrixToAllKeypoints(shape, getTranslateMatrix_point(temp_c, -1));
 
     const image1ZeroPointFixMat_withoutRotationFix = getShapeFixingTransformationMatrix(shape).scaleFixMat;
+    console.log(image1ZeroPointFixMat_withoutRotationFix);
     if (g_apply || true)
         shape = applyTransformationMatrixToAllKeypoints(shape, image1ZeroPointFixMat_withoutRotationFix);
 
@@ -1084,6 +1100,8 @@ for ( var i = 0; i < images.length; i++ ){
             var url = new URL(url_string);
             var point = url.searchParams.get("point");
             var image = url.searchParams.get("image");
+            var shapeIndex = url.searchParams.get("shapeIndex");
+            var appliedTrans = url.searchParams.get("appliedTransformationsMat");
             console.log(point);
             console.log(image);
             try {
@@ -1101,6 +1119,14 @@ for ( var i = 0; i < images.length; i++ ){
                 changeImgSrc(image);
             else
                 changeImgSrc(images[0]);
+
+            if (shapeIndex != undefined && shapeIndex != null) {
+                setShape(shapeIndex);
+            }
+
+            if (appliedTrans != undefined && appliedTrans != null) {
+                g_transformState.appliedTransformationsMat = JSON.parse( appliedTrans );
+            }
         }
     };
 

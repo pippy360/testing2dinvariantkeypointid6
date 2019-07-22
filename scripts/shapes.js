@@ -6,6 +6,13 @@ const square_shape = [
 	[  0, 100]
 ]
 
+const square_shape_small = [
+	[-1, -1],
+	[ 1, -1],
+	[ 1,  1],
+	[-1,  1]
+]
+
 const square_shape2 = [
 	[  0,   0],
 	[ 50,   0],
