@@ -336,8 +336,8 @@ function getk1val(inshape) {
         yss_sum += Math.pow( inshape[i][1], 4 );
         xy_mult_sum += inshape[i][0] * inshape[i][1];
     }
-    let val = Math.pow(ys_sum,2)/( (xs_sum*ys_sum) - xy_mult_sum );
-    return Math.sqrt( Math.sqrt( ys_sum) )/Math.sqrt( Math.sqrt( xs_sum) );
+    let val = Math.pow(ys_sum, 2)/( (xs_sum*ys_sum) - Math.pow(xy_mult_sum, 2) );
+    return Math.sqrt( Math.sqrt( val ) );
 }
 
 function getScaleVal() {
